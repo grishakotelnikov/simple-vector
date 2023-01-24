@@ -38,7 +38,7 @@ public:
 
     // Создаёт вектор из size элементов, инициализированных значением по умолчанию
     explicit SimpleVector(size_t size)
-    : SimpleVector(size, std::move(Type()))
+            : SimpleVector(size, std::move(Type()))
     {
     }
 
@@ -47,9 +47,9 @@ public:
     }
 
     SimpleVector(size_t size, Type &&value)
-    : items_(size),
-    size_(size),
-    capacity_(size)
+            : items_(size),
+              size_(size),
+              capacity_(size)
     {
         for (size_t i = 0; i < size_; ++i)
         {
@@ -59,7 +59,7 @@ public:
 
     // Создаёт вектор из size элементов, инициализированных значением value
     SimpleVector(size_t size, const Type& value)
-    :items_(size)
+            :items_(size)
     {
         size_ = size;
         capacity_ = size;
@@ -67,7 +67,6 @@ public:
     }
 
     SimpleVector(const SimpleVector& other) {
-        assert(size_ == 0);
         SimpleVector<Type> copy(other.GetSize());
         std::copy((other.items_).Get(), ((other.items_).Get() + other.GetSize()), (copy.items_).Get());
         copy.capacity_ = other.capacity_;
@@ -75,7 +74,6 @@ public:
     }
 
     SimpleVector(SimpleVector&& other) {
-        assert(size_ == 0);
         items_ = std::move(other.items_);
         size_ = std::exchange(other.size_, 0);
         capacity_ = std::exchange(other.capacity_, 0);
@@ -107,11 +105,13 @@ public:
 
     // Возвращает ссылку на элемент с индексом index
     Type& operator[](size_t index) noexcept {
+        assert(index < size_);
         return items_[index];
     }
 
     // Возвращает константную ссылку на элемент с индексом index
     const Type& operator[](size_t index) const noexcept {
+        assert(index < size_);
         return items_[index];
     }
 
@@ -172,39 +172,38 @@ public:
     // Возвращает итератор на начало массива
     // Для пустого массива может быть равен (или не равен) nullptr
     Iterator begin() noexcept {
-        return &items_[0];
+        return items_.Get();
     }
 
     // Возвращает итератор на элемент, следующий за последним
     // Для пустого массива может быть равен (или не равен) nullptr
     Iterator end() noexcept {
-        return &items_[size_];
+        return items_.Get() + size_;
     }
 
     // Возвращает константный итератор на начало массива
     // Для пустого массива может быть равен (или не равен) nullptr
     ConstIterator begin() const noexcept {
-        return &items_[0];
-
+        return items_.Get();
     }
 
     // Возвращает итератор на элемент, следующий за последним
     // Для пустого массива может быть равен (или не равен) nullptr
     ConstIterator end() const noexcept {
-        return &items_[size_];
+        return items_.Get() + size_;
 
     }
 
     // Возвращает константный итератор на начало массива
     // Для пустого массива может быть равен (или не равен) nullptr
     ConstIterator cbegin() const noexcept {
-        return &items_[0];
+        return items_.Get();
     }
 
     // Возвращает итератор на элемент, следующий за последним
     // Для пустого массива может быть равен (или не равен) nullptr
     ConstIterator cend() const noexcept {
-        return &items_[size_];
+        return items_.Get() + size_;
     }
 
     SimpleVector& operator=( SimpleVector&& rhs) {
@@ -236,11 +235,11 @@ public:
     // Добавляет элемент в конец вектора
     // При нехватке места увеличивает вдвое вместимость вектора
     void PushBack(const Type& item) {
-        this->Resize(size_ + 1);
+        Resize(size_ + 1);
         items_[size_ - 1] = std::move(item);
     }
     void PushBack(Type&& item) {
-        this->Resize(size_ + 1);
+        Resize(size_ + 1);
         items_[size_ - 1] = std::move(item);
     }
 
@@ -281,7 +280,7 @@ public:
             return begin() + n;
         }
     }
-    
+
     Iterator Insert(ConstIterator pos, Type &&value)
     {
         assert(begin() <= pos && pos <= end());
@@ -329,14 +328,14 @@ public:
     }
     // "Удаляет" последний элемент вектора. Вектор не должен быть пустым
     void PopBack() noexcept {
-        if ( IsEmpty() ){
-            return;
-        }
+        assert(IsEmpty());
         size_--;
     }
 
     // Удаляет элемент вектора в указанной позиции
     Iterator Erase(ConstIterator pos) {
+        assert(pos >= begin() && pos <= end());
+        assert(IsEmpty());
         auto distance_  = std::distance(cbegin(), pos);
         auto* it = begin() + distance_;
         std::move((it + 1), end(), it);
